@@ -1,0 +1,30 @@
+{
+    "name": "GitHub PR Review (OpenAI)",
+    "version": "1.0",
+    "manifest_version": 3,
+    "description": "Use OpenAI to review a GitHub PR and optionally leave a summary comment.",
+    "permissions": [
+      "activeTab",
+      "storage"
+    ],
+    "host_permissions": [
+      "https://github.com/*",
+      "https://api.openai.com/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": [
+          "https://github.com/*/*/pull/*",
+          "https://api.github.com/*"
+        ],
+        "js": ["contentScript.js"]
+      }
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    }
+  }
+  
