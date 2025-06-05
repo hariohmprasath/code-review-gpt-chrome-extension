@@ -12,7 +12,7 @@
   
     // 2. Create a button to trigger the AI review
     const reviewButton = document.createElement('button');
-    reviewButton.innerText = '🧑‍💻✨ Review Code ✨';
+    reviewButton.innerText = '🧑‍💻';
     reviewButton.style.margin = '8px';
     reviewButton.style.padding = '10px 24px';
     reviewButton.style.background = 'linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%)';
@@ -140,78 +140,76 @@
         const branchName = prData.head.ref;
         
         const jsonBody = JSON.stringify({
-            model: 'o3-mini',
-            messages: [
-              {
-                role: 'system',
-                content: `You are an expert staff-level software engineer performing a code review. 
-          
-          IMPORTANT: Focus ONLY on the CHANGED or ADDED code lines in the PR. DO NOT review or comment on existing code that wasn't modified.
-          
-          Your task is to critically analyze the provided code changes and generate professional, detailed review feedback.
-          
-          Review Requirements:
-          1. Focus Areas:
-          • Code quality and adherence to best practices (clean code, SOLID principles, maintainability).
-          • Identification of potential memory leaks or improper resource management.
-          • Detection of multi-threading or concurrency issues (race conditions, deadlocks, data corruption).
-          • Analysis of performance impacts (scalability, time and space complexity, bottlenecks).
-          • Security vulnerabilities (input validation, secure coding practices).
-          
-          2. Presentation:
-          • Format the feedback as a Markdown table.
-          • Do not summarize or describe the PR contents; only focus on actionable feedback.
-          • Each table row must represent a single identified issue or a noteworthy good practice.
-          • Prioritize the findings: most critical issues appear at the top (sorted by priority: Critical, High, Medium, Low, Info).
-          
-          3. Table Columns:
-          • Priority: Critical / High / Medium / Low / Info
-          • Category: Code Quality / Memory / Concurrency / Performance / Security / Best Practice
-          • Description: Clear, technical explanation of the issue or observation.
-          • Suggestion: Specific recommended action or fix, using professional terminology.
-          • Code Reference: If possible, point to file names, function names, or line numbers (based on available context).
-          
-          4. Tone and Detail:
-          • Maintain a professional, respectful tone.
-          • Be precise, deeply technical, and assume the developer reading it is experienced but may benefit from expert insight.
-          • Provide constructive recommendations even for well-written code (e.g., if something could be optimized further).
-          
-          5. Additional Instructions:
-          • Avoid generic comments like "Looks good" — if no issue is found, omit that area.
-          • If complex concepts are involved (like concurrency models, thread safety, caching), briefly explain why they matter in this context inside the "Suggestion" cell.
-          • If unsure about a specific detail due to lack of full context, clearly state assumptions.
-          
-          Additionally:
-          - Include GitHub Markdown links pointing directly to file and line number references.
-          - Repository: https://github.com/${owner}/${repo}
-          - PR Branch: ${branchName}
-          - Use links like [<short file name>#L42](https://github.com/${owner}/${repo}/blob/${branchName}/src/index.js#L42)
-          - Make formatting as pretty as possible, including emojis and modern styles when appropriate.
-          `
-              },
-              {
-                role: 'user',
-                content: `Please review the following code changes with a critical eye, focusing on best practices, memory management, concurrency and multithreading safety, performance impact, and security vulnerabilities.
-          
-          IMPORTANT: Only review the code that has been changed or added. Lines marked with "/* CONTEXT */" are just for context and should NOT be reviewed.
-          
-          Identify any potential issues, inefficiencies, or risks, and prioritize them based on severity (Critical, High, Medium, Low, Info).
-          
-          Do not provide a summary of the PR itself. Only provide detailed feedback.
-          
-          Present the review findings in a Markdown table with the following columns:
-          • Priority (Critical, High, Medium, Low, Info)
-          • Category (e.g., Code Quality, Memory, Concurrency, Performance, Security, Best Practice)
-          • Description (detailed technical explanation of the issue or observation)
-          • Suggestion (specific recommended action or fix)
-          • Code Reference (file name and/or function/line number if available)
-          
-          Be thorough, professional, and technically precise.
-          
-          Changes:
-          ${combinedChanges}`
-              }
-            ]
+          model: "o4-mini-2025-04-16",
+          messages: [
+            {
+              role: "system",
+              content: `
+                    You are an expert, staff-level software engineer performing a **comprehensive, language-agnostic code review** on a GitHub Pull Request. Focus **only** on the *new* or *modified* lines of code. Do **not** review any existing code that was not changed (any code marked with "/* CONTEXT */" or unchanged lines).
+
+                    **Your objectives:**
+                    1. **Scope**: Analyze only the diff provided; ignore unchanged context.
+                    2. **Dimensions**:
+                      - **Code Quality & Maintainability**: naming clarity, modular design, SOLID principles, duplication detection, readability.
+                      - **Memory & Resource Management**: proper disposal of resources, avoiding large allocations or leaks, correct use of language-specific memory constructs.
+                      - **Concurrency & Thread Safety**: thread safety patterns, race conditions, deadlock risks, proper use of language-native synchronization or concurrency primitives.
+                      - **Performance & Scalability**: algorithmic complexity, I/O in hot paths, caching strategies, unnecessary object creation or expensive calls.
+                      - **Security & Vulnerabilities**: input validation, protection against injection (SQL, command, template), proper authentication/authorization checks, no hard-coded secrets.
+                      - **Best Practices & Logging**: error handling, logging levels, configuration externalization, test coverage for new functionality.
+
+                    3. **Tone & Audience**:
+                      - Write as if addressing an experienced engineer.
+                      - Maintain a professional, respectful tone.
+                      - Assume familiarity with advanced concepts; focus on **why** something matters and **how** to fix it.
+
+                    4. **Formatting Requirements**:
+                      - **Output**: A single Markdown table, no extra paragraphs.
+                      - **Each row** must represent one finding—bug, risk, improvement, or best practice.
+                      - **Order**: Sort rows by severity: 🛑 Critical, 🔥 High, ⚠️ Medium, 🟡 Low, ℹ️ Info.
+
+                    5. **Markdown Table Columns** (in this order):
+                      | **Priority** | **Category**     | **Description**                                                                                                    | **Suggestion**                                                                                                      | **Code Reference**                                                                                                 |
+                      |--------------|------------------|--------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+                      | (🛑/🔥/⚠️/🟡/ℹ️) | Code Quality / Memory / Concurrency / Performance / Security / Best Practice | Concise, technical explanation of the issue or notable observation—**why** it matters.                               | Concrete recommendation or fix—**how** to correct or optimize the code. If assumption needed, state it clearly.      | GitHub link to file and line (e.g., [File.ext#L45](https://github.com/${owner}/${repo}/blob/${branchName}/path/to/File.ext#L45)) |
+
+                    6. **Severity Definitions**:
+                      - 🛑 **Critical**: Incorrect behavior, data corruption, crashes, severe security holes. Must fix before merge.
+                      - 🔥 **High**: Major security vulnerabilities, memory leaks, deadlocks, severe performance bottlenecks.
+                      - ⚠️ **Medium**: Suboptimal practices affecting performance or maintainability, minor resource leaks, weak validation.
+                      - 🟡 **Low**: Cosmetic/style issues, minor best-practice improvements.
+                      - ℹ️ **Info**: Positive notes (good practices), optional improvements, or clarifications.
+
+                    7. **Additional Instructions**:
+                      - Omit categories with no findings; do **not** write "Looks good."
+                      - For ℹ️ Info rows, briefly state **why** a pattern is exemplary.
+                      - If uncertain, explicitly state your assumption (e.g., “Assuming this function may be called concurrently…”).
+                      - **Match line numbers exactly** to the lines in the provided diff. The Code Reference link must point to the actual line added or changed. For example, if the diff shows “+ console.log('X');” on line 12, your link must be "[File.js#L12](https://github.com/${owner}/${repo}/blob/${branchName}/path/to/File.js#L12)".
+                      - Always include precise GitHub links to line numbers or ranges in the format:
+                        \`[File.ext#Lxx-Lyy](https://github.com/${owner}/${repo}/blob/${branchName}/path/to/File.ext#Lxx-Lyy)\`
+                          or a single line: \`#Lxx\`.
+
+                    8. **Repository Context**:
+                      - GitHub repository: https://github.com/${owner}/${repo}
+                      - Branch: ${branchName}
+
+                    Use this system prompt verbatim.`
+                },
+                {
+                  role: "user",
+                  content: `
+                    Please review the following code changes with a critical eye, focusing on best practices, memory management, concurrency and thread safety, performance impact, and security vulnerabilities.
+
+                    IMPORTANT: Only review the code that has been changed or added. Lines marked with "/* CONTEXT */" are for context and should NOT be reviewed.
+
+                    Identify any potential issues, inefficiencies, or risks, and prioritize them based on severity (🛑 Critical, 🔥 High, ⚠️ Medium, 🟡 Low, ℹ️ Info).
+
+                    Do not provide a summary of the PR itself. Only provide detailed feedback in a Markdown table.
+                    
+                    Changes:
+                    ${combinedChanges}
+                  `
+            }
+          ]
         });
           
         const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -254,7 +252,7 @@
         console.error(err);
         alert(`Error reviewing PR: ${err.message}`);
       } finally {
-        reviewButton.innerText = '🧑‍💻✨ Review Code ✨';
+        reviewButton.innerText = '🧑‍💻';
       }
     });
   

@@ -3,19 +3,371 @@
 <head>
   <meta charset="utf-8">
   <title>GitHub PR Review Extension</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 380px;
+      min-height: 500px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      background: white;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 24px 20px;
+    }
+
+    .security-notice {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #856404;
+    }
+
+    .security-notice .icon {
+      display: inline-block;
+      margin-right: 6px;
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .help-btn {
+      background: none;
+      border: none;
+      color: #667eea;
+      margin-left: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: underline;
+      padding: 0;
+    }
+
+    .help-btn:hover {
+      color: #764ba2;
+    }
+
+    .input-container {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .save-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .save-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .save-btn:active {
+      transform: translateY(0);
+    }
+
+    .success-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #d4edda;
+      color: #155724;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      border: 1px solid #c3e6cb;
+    }
+
+    .success-message.show {
+      transform: translateX(0);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 320px;
+      width: 90%;
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    .modal-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .modal-body h4 {
+      color: #333;
+      margin: 16px 0 8px 0;
+      font-size: 14px;
+    }
+
+    .modal-body ol {
+      margin: 8px 0 8px 20px;
+    }
+
+    .modal-body li {
+      margin-bottom: 4px;
+    }
+
+    .modal-body code {
+      background: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 12px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .status-indicator.empty {
+      background: #dc3545;
+    }
+
+    .status-indicator.filled {
+      background: #28a745;
+    }
+  </style>
 </head>
 <body>
-  <h3>GitHub PR Review Extension</h3>
-  <div>
-    <label>OpenAI API Key:</label>
-    <input type="password" id="apiKey" placeholder="sk-..."/>
-    <button id="saveKey">Save</button>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 GitHub PR Review</h1>
+      <p>AI-powered code review assistant</p>
+    </div>
+    
+    <div class="content">
+      <div class="security-notice">
+        <span class="icon">🔒</span>
+        <strong>Security Notice:</strong> Your API keys are stored locally in your browser and never transmitted to third parties. Keep them secure and never share them.
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="status-indicator empty" id="openai-status"></span>
+          OpenAI API Key
+          <button class="help-btn" onclick="showModal('openai-modal')">How to get?</button>
+        </label>
+        <div class="input-container">
+          <input type="password" id="apiKey" class="form-input" placeholder="sk-proj-..." />
+          <button id="saveKey" class="save-btn">💾 Save OpenAI Key</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="status-indicator empty" id="github-status"></span>
+          GitHub Personal Access Token
+          <button class="help-btn" onclick="showModal('github-modal')">How to get?</button>
+        </label>
+        <div class="input-container">
+          <input type="password" id="githubToken" class="form-input" placeholder="ghp_..." />
+          <button id="saveGithubToken" class="save-btn">💾 Save GitHub Token</button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="margin-top: 16px;">
-    <label>GitHub Token:</label>
-    <input type="password" id="githubToken" placeholder="ghp_..."/>
-    <button id="saveGithubToken">Save</button>
+
+  <!-- OpenAI Modal -->
+  <div id="openai-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Getting Your OpenAI API Key</h3>
+        <button class="close-btn" onclick="hideModal('openai-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Follow these steps to get your OpenAI API key:</p>
+        <ol>
+          <li>Visit <code>platform.openai.com</code></li>
+          <li>Sign in or create an account</li>
+          <li>Navigate to <strong>API Keys</strong> section</li>
+          <li>Click <strong>Create new secret key</strong></li>
+          <li>Copy the key (starts with <code>sk-proj-</code>)</li>
+          <li>Paste it in the field above</li>
+        </ol>
+        <h4>⚠️ Important:</h4>
+        <ul style="margin-left: 20px;">
+          <li>Keep your API key secure and private</li>
+          <li>You'll need billing setup for API usage</li>
+          <li>Monitor your usage in OpenAI dashboard</li>
+        </ul>
+      </div>
+    </div>
   </div>
+
+  <!-- GitHub Modal -->
+  <div id="github-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Getting Your GitHub Token</h3>
+        <button class="close-btn" onclick="hideModal('github-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Follow these steps to create a GitHub Personal Access Token:</p>
+        <ol>
+          <li>Go to <code>github.com/settings/tokens</code></li>
+          <li>Click <strong>Generate new token (classic)</strong></li>
+          <li>Give it a descriptive name</li>
+          <li>Select required scopes:
+            <ul style="margin: 8px 0 8px 20px;">
+              <li><code>repo</code> - Full repository access</li>
+              <li><code>read:org</code> - Read organization data</li>
+            </ul>
+          </li>
+          <li>Click <strong>Generate token</strong></li>
+          <li>Copy the token (starts with <code>ghp_</code>)</li>
+          <li>Paste it in the field above</li>
+        </ol>
+        <h4>⚠️ Important:</h4>
+        <ul style="margin-left: 20px;">
+          <li>Save the token immediately - you won't see it again</li>
+          <li>Keep it secure like a password</li>
+          <li>Set an appropriate expiration date</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="success-message" class="success-message">
+    <span id="success-text">Saved successfully!</span>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
