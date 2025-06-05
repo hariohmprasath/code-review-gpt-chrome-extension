@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-              model: 'gpt-3.5-turbo',
+              model: 'o4-mini-2025-04-16',
               messages: [
                 {
                   role: 'system',
