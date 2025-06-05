@@ -1,8 +1,8 @@
 {
-    "name": "GitHub PR Review (OpenAI)",
+    "name": "Code Buddy",
     "version": "1.0",
     "manifest_version": 3,
-    "description": "Use OpenAI to review a GitHub PR and optionally leave a summary comment.",
+    "description": "Use OpenAI to review a GitHub PR and leave the findings in a comment.",
     "permissions": [
       "activeTab",
       "storage"
