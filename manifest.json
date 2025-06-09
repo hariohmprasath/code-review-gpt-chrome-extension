@@ -3,8 +3,7 @@
     "version": "1.0",
     "manifest_version": 3,
     "description": "Use OpenAI to review a GitHub PR and leave the findings in a comment.",
-    "permissions": [
-      "activeTab",
+    "permissions": [      
       "storage"
     ],
     "host_permissions": [
